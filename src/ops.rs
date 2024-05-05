@@ -14802,6 +14802,77 @@ impl std::default::Default for JpegsaveOptions {
     }
 }
 
+/// Options for jpegxlsave operation
+#[derive(Clone, Debug)]
+pub struct JxlsaveOptions {
+    /// q: `i32` -> Q factor
+    /// min: 1, max: 100, default: 75
+    pub q: i32,
+    /// optimize_coding: `bool` -> Compute optimal Huffman coding tables
+    /// default: false
+    pub optimize_coding: bool,
+    /// interlace: `bool` -> Generate an interlaced (progressive) jpeg
+    /// default: false
+    pub interlace: bool,
+    /// trellis_quant: `bool` -> Apply trellis quantisation to each 8x8 block
+    /// default: false
+    pub trellis_quant: bool,
+    /// overshoot_deringing: `bool` -> Apply overshooting to samples with extreme values
+    /// default: false
+    pub overshoot_deringing: bool,
+    /// optimize_scans: `bool` -> Split spectrum of DCT coefficients into separate scans
+    /// default: false
+    pub optimize_scans: bool,
+    /// quant_table: `i32` -> Use predefined quantization table with given index
+    /// min: 0, max: 8, default: 0
+    pub quant_table: i32,
+    /// subsample_mode: `ForeignSubsample` -> Select chroma subsample operation mode
+    ///  `Auto` -> VIPS_FOREIGN_SUBSAMPLE_AUTO = 0 [DEFAULT]
+    ///  `On` -> VIPS_FOREIGN_SUBSAMPLE_ON = 1
+    ///  `Off` -> VIPS_FOREIGN_SUBSAMPLE_OFF = 2
+    ///  `Last` -> VIPS_FOREIGN_SUBSAMPLE_LAST = 3
+    pub subsample_mode: ForeignSubsample,
+    /// restart_interval: `i32` -> Add restart markers every specified number of mcu
+    /// min: 0, max: 2147483647, default: 0
+    pub restart_interval: i32,
+    /// keep: `ForeignKeep` -> Which metadata to retain
+    ///  `None` -> VIPS_FOREIGN_KEEP_NONE = 0
+    ///  `Exif` -> VIPS_FOREIGN_KEEP_EXIF = 1
+    ///  `Xmp` -> VIPS_FOREIGN_KEEP_XMP = 2
+    ///  `Iptc` -> VIPS_FOREIGN_KEEP_IPTC = 4
+    ///  `Icc` -> VIPS_FOREIGN_KEEP_ICC = 8
+    ///  `Other` -> VIPS_FOREIGN_KEEP_OTHER = 16
+    ///  `All` -> VIPS_FOREIGN_KEEP_ALL = 31 [DEFAULT]
+    pub keep: ForeignKeep,
+    /// background: `Vec<f64>` -> Background value
+    pub background: Vec<f64>,
+    /// page_height: `i32` -> Set page height for multipage save
+    /// min: 0, max: 10000000, default: 0
+    pub page_height: i32,
+    /// profile: `String` -> Filename of ICC profile to embed
+    pub profile: String,
+}
+
+impl std::default::Default for JxlsaveOptions {
+    fn default() -> Self {
+        JxlsaveOptions {
+            q: i32::from(75),
+            optimize_coding: false,
+            interlace: false,
+            trellis_quant: false,
+            overshoot_deringing: false,
+            optimize_scans: false,
+            quant_table: i32::from(0),
+            subsample_mode: ForeignSubsample::Auto,
+            restart_interval: i32::from(0),
+            keep: ForeignKeep::All,
+            background: Vec::new(),
+            page_height: i32::from(0),
+            profile: String::from("sRGB"),
+        }
+    }
+}
+
 /// VipsForeignSaveJpegFile (jpegsave), save image to jpeg file (.jpg, .jpeg, .jpe), priority=0, rgb-cmyk
 /// inp: `&VipsImage` -> Image to save
 /// filename: `&str` -> Filename to save to
@@ -14870,6 +14941,103 @@ pub fn jpegsave_with_opts(
         let profile_in_name = utils::new_c_string("profile")?;
 
         let vips_op_response = bindings::vips_jpegsave(
+            inp_in,
+            filename_in.as_ptr(),
+            q_in_name.as_ptr(),
+            q_in,
+            optimize_coding_in_name.as_ptr(),
+            optimize_coding_in,
+            interlace_in_name.as_ptr(),
+            interlace_in,
+            trellis_quant_in_name.as_ptr(),
+            trellis_quant_in,
+            overshoot_deringing_in_name.as_ptr(),
+            overshoot_deringing_in,
+            optimize_scans_in_name.as_ptr(),
+            optimize_scans_in,
+            quant_table_in_name.as_ptr(),
+            quant_table_in,
+            subsample_mode_in_name.as_ptr(),
+            subsample_mode_in,
+            restart_interval_in_name.as_ptr(),
+            restart_interval_in,
+            keep_in_name.as_ptr(),
+            keep_in,
+            background_in_name.as_ptr(),
+            background_in,
+            page_height_in_name.as_ptr(),
+            page_height_in,
+            profile_in_name.as_ptr(),
+            profile_in.as_ptr(),
+            NULL,
+        );
+        utils::result(vips_op_response, (), Error::JpegsaveError)
+    }
+}
+
+pub fn jxlsave_with_opts(
+    inp: &VipsImage,
+    filename: &str,
+    jxlsave_options: &JxlsaveOptions,
+) -> Result<()> {
+    unsafe {
+        let inp_in: *mut bindings::VipsImage = inp.ctx;
+        let filename_in: CString = utils::new_c_string(filename)?;
+
+        let q_in: i32 = jxlsave_options.q;
+        let q_in_name = utils::new_c_string("Q")?;
+
+        let optimize_coding_in: i32 = if jxlsave_options.optimize_coding {
+            1
+        } else {
+            0
+        };
+        let optimize_coding_in_name = utils::new_c_string("optimize-coding")?;
+
+        let interlace_in: i32 = if jxlsave_options.interlace { 1 } else { 0 };
+        let interlace_in_name = utils::new_c_string("interlace")?;
+
+        let trellis_quant_in: i32 = if jxlsave_options.trellis_quant { 1 } else { 0 };
+        let trellis_quant_in_name = utils::new_c_string("trellis-quant")?;
+
+        let overshoot_deringing_in: i32 = if jxlsave_options.overshoot_deringing {
+            1
+        } else {
+            0
+        };
+        let overshoot_deringing_in_name = utils::new_c_string("overshoot-deringing")?;
+
+        let optimize_scans_in: i32 = if jxlsave_options.optimize_scans {
+            1
+        } else {
+            0
+        };
+        let optimize_scans_in_name = utils::new_c_string("optimize-scans")?;
+
+        let quant_table_in: i32 = jxlsave_options.quant_table;
+        let quant_table_in_name = utils::new_c_string("quant-table")?;
+
+        let subsample_mode_in: i32 = jxlsave_options.subsample_mode as i32;
+        let subsample_mode_in_name = utils::new_c_string("subsample-mode")?;
+
+        let restart_interval_in: i32 = jxlsave_options.restart_interval;
+        let restart_interval_in_name = utils::new_c_string("restart-interval")?;
+
+        let keep_in: i32 = jxlsave_options.keep as i32;
+        let keep_in_name = utils::new_c_string("keep")?;
+
+        let background_wrapper =
+            utils::VipsArrayDoubleWrapper::from(&jxlsave_options.background[..]);
+        let background_in = background_wrapper.ctx;
+        let background_in_name = utils::new_c_string("background")?;
+
+        let page_height_in: i32 = jxlsave_options.page_height;
+        let page_height_in_name = utils::new_c_string("page-height")?;
+
+        let profile_in: CString = utils::new_c_string(&jxlsave_options.profile)?;
+        let profile_in_name = utils::new_c_string("profile")?;
+
+        let vips_op_response = bindings::vips_jxlsave(
             inp_in,
             filename_in.as_ptr(),
             q_in_name.as_ptr(),

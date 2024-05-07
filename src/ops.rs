@@ -14978,97 +14978,33 @@ pub fn jpegsave_with_opts(
 pub fn jxlsave_with_opts(
     inp: &VipsImage,
     filename: &str,
-    jxlsave_options: &JxlsaveOptions,
+    _jxlsave_options: &JxlsaveOptions,
 ) -> Result<()> {
     unsafe {
         let inp_in: *mut bindings::VipsImage = inp.ctx;
         let filename_in: CString = utils::new_c_string(filename)?;
 
-        let q_in: i32 = jxlsave_options.q;
-        let q_in_name = utils::new_c_string("Q")?;
-
-        let optimize_coding_in: i32 = if jxlsave_options.optimize_coding {
-            1
-        } else {
-            0
-        };
-        let optimize_coding_in_name = utils::new_c_string("optimize-coding")?;
-
-        let interlace_in: i32 = if jxlsave_options.interlace { 1 } else { 0 };
-        let interlace_in_name = utils::new_c_string("interlace")?;
-
-        let trellis_quant_in: i32 = if jxlsave_options.trellis_quant { 1 } else { 0 };
-        let trellis_quant_in_name = utils::new_c_string("trellis-quant")?;
-
-        let overshoot_deringing_in: i32 = if jxlsave_options.overshoot_deringing {
-            1
-        } else {
-            0
-        };
-        let overshoot_deringing_in_name = utils::new_c_string("overshoot-deringing")?;
-
-        let optimize_scans_in: i32 = if jxlsave_options.optimize_scans {
-            1
-        } else {
-            0
-        };
-        let optimize_scans_in_name = utils::new_c_string("optimize-scans")?;
-
-        let quant_table_in: i32 = jxlsave_options.quant_table;
-        let quant_table_in_name = utils::new_c_string("quant-table")?;
-
-        let subsample_mode_in: i32 = jxlsave_options.subsample_mode as i32;
-        let subsample_mode_in_name = utils::new_c_string("subsample-mode")?;
-
-        let restart_interval_in: i32 = jxlsave_options.restart_interval;
-        let restart_interval_in_name = utils::new_c_string("restart-interval")?;
-
-        let keep_in: i32 = jxlsave_options.keep as i32;
-        let keep_in_name = utils::new_c_string("keep")?;
-
-        let background_wrapper =
-            utils::VipsArrayDoubleWrapper::from(&jxlsave_options.background[..]);
-        let background_in = background_wrapper.ctx;
-        let background_in_name = utils::new_c_string("background")?;
-
-        let page_height_in: i32 = jxlsave_options.page_height;
-        let page_height_in_name = utils::new_c_string("page-height")?;
-
-        let profile_in: CString = utils::new_c_string(&jxlsave_options.profile)?;
-        let profile_in_name = utils::new_c_string("profile")?;
-
         let vips_op_response = bindings::vips_jxlsave(
             inp_in,
             filename_in.as_ptr(),
-            q_in_name.as_ptr(),
-            q_in,
-            optimize_coding_in_name.as_ptr(),
-            optimize_coding_in,
-            interlace_in_name.as_ptr(),
-            interlace_in,
-            trellis_quant_in_name.as_ptr(),
-            trellis_quant_in,
-            overshoot_deringing_in_name.as_ptr(),
-            overshoot_deringing_in,
-            optimize_scans_in_name.as_ptr(),
-            optimize_scans_in,
-            quant_table_in_name.as_ptr(),
-            quant_table_in,
-            subsample_mode_in_name.as_ptr(),
-            subsample_mode_in,
-            restart_interval_in_name.as_ptr(),
-            restart_interval_in,
-            keep_in_name.as_ptr(),
-            keep_in,
-            background_in_name.as_ptr(),
-            background_in,
-            page_height_in_name.as_ptr(),
-            page_height_in,
-            profile_in_name.as_ptr(),
-            profile_in.as_ptr(),
-            NULL,
         );
         utils::result(vips_op_response, (), Error::JpegsaveError)
+    }
+}
+
+pub fn jxlsave_buffer(inp: &VipsImage) -> Result<Vec<u8>> {
+    unsafe {
+        let inp_in: *mut bindings::VipsImage = inp.ctx;
+        let mut buffer_buf_size: u64 = 0;
+        let mut buffer_out: *mut c_void = null_mut();
+
+        let vips_op_response =
+            bindings::vips_jxlsave_buffer(inp_in, &mut buffer_out, &mut buffer_buf_size, NULL);
+        utils::result(
+            vips_op_response,
+            utils::new_byte_array(buffer_out, buffer_buf_size),
+            Error::JpegsaveBufferError,
+        )
     }
 }
 
